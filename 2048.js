@@ -1,189 +1,380 @@
-var board;
-var score = 0;
-var rows = 4;
-var columns = 4;
+const defaultTraversalX = [0, 1, 2, 3];
+const defaultTraversalY = [0, 1, 2, 3];
+let head = document.getElementById("head");
+let scoreBar = document.getElementById("scoreBar");
+let scoreItem = document.getElementById("score");
+let container = document.getElementById("container");
+let curGame = null;
+let mask = document.querySelectorAll(".mask,.gameover,#again");
+let game = document.getElementById("game");
 
-window.onload = function() {
-    setGame();
+document.addEventListener("DOMContentLoaded", () => {
+  curGame = new Game();
+  curGame.init();
+});
+let btn = document.getElementById("restart");
+let againBtn = document.getElementById("again");
+btn.onclick = newGame;
+againBtn.onclick = newGame;
+function newGame() {
+  curGame.clear();
+  curGame = null;
+  curGame = new Game();
+  curGame.init();
 }
 
-function setGame() {
-    // board = [
-    //     [2, 2, 2, 2],
-    //     [2, 2, 2, 2],
-    //     [4, 4, 8, 8],
-    //     [4, 4, 8, 8]
-    // ];
+class Game {
+  /* direction */
+  static dir = [
+    [-1, 0],
+    [0, 1],
+    [1, 0],
+    [0, -1]
+  ];
+  constructor() {
+    this.game = document.getElementById("game");
+    this.item = game.querySelectorAll(".item");
+    this.tile = new Array(4);
+    this.score = 0;
+  }
 
-    board = [
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0]
-    ]
-
-    for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < columns; c++) {
-            let tile = document.createElement("div");
-            tile.id = r.toString() + "-" + c.toString();
-            let num = board[r][c];
-            updateTile(tile, num);
-            document.getElementById("board").append(tile);
+  /**
+   * create new tile to the game board.
+   * create 2 tiles when initializing.
+   * new tile's value is 2 or 4.
+   * @param {Integer} the num of tile to create
+   */
+  createNewTile = (num = 1) => {
+    for (let i = 0; i < num; i++) {
+      let rand = Math.floor(Math.random() * 16);
+      let x = Math.floor(rand / 4);
+      let y = rand % 4;
+      while (this.tile[x][y]) {
+        rand = Math.floor(Math.random() * 16);
+        x = Math.floor(rand / 4);
+        y = rand % 4;
+      }
+      let value = (Math.floor(Math.random() * 2) + 1) * 2;
+      this.tile[x][y] = value;
+      this.addTile({ x: x, y: y, val: value }, 250, false, true);
+    }
+  };
+  /**
+   * check if there has a empty space
+   * @return {boolean} no empty space
+   */
+  isNoEmptySpace = () => {
+    for (let row of this.tile) {
+      for (let i of row) {
+        if (i == 0) return false;
+      }
+    }
+    return true;
+  };
+  /**
+   * if the board has no empty space,
+   * check if any tile can be merged.
+   * @return {boolean} some tiles can be merged.
+   */
+  canMove = () => {
+    for (let i = 0; i < 4; i++) {
+      for (let j = 0; j < 4; j++) {
+        if (
+          (j < 3 && this.tile[i][j] == this.tile[i][j + 1]) ||
+          (i < 3 && this.tile[i][j] == this.tile[i + 1][j])
+        ) {
+          return true;
         }
-    }
-    //create 2 to begin the game
-    setTwo();
-    setTwo();
-
-}
-
-function updateTile(tile, num) {
-    tile.innerText = "";
-    tile.classList.value = ""; //clear the classList
-    tile.classList.add("tile");
-    if (num > 0) {
-        tile.innerText = num.toString();
-        if (num <= 4096) {
-            tile.classList.add("x"+num.toString());
-        } else {
-            tile.classList.add("x8192");
-        }                
-    }
-}
-
-document.addEventListener('keyup', (e) => {
-    if (e.code == "ArrowLeft") {
-        slideLeft();
-        setTwo();
-    }
-    else if (e.code == "ArrowRight") {
-        slideRight();
-        setTwo();
-    }
-    else if (e.code == "ArrowUp") {
-        slideUp();
-        setTwo();
-
-    }
-    else if (e.code == "ArrowDown") {
-        slideDown();
-        setTwo();
-    }
-    document.getElementById("score").innerText = score;
-})
-
-function filterZero(row){
-    return row.filter(num => num != 0); //create new array of all nums != 0
-}
-
-function slide(row) {
-    //[0, 2, 2, 2] 
-    row = filterZero(row); //[2, 2, 2]
-    for (let i = 0; i < row.length-1; i++){
-        if (row[i] == row[i+1]) {
-            row[i] *= 2;
-            row[i+1] = 0;
-            score += row[i];
-        }
-    } //[4, 0, 2]
-    row = filterZero(row); //[4, 2]
-    //add zeroes
-    while (row.length < columns) {
-        row.push(0);
-    } //[4, 2, 0, 0]
-    return row;
-}
-
-function slideLeft() {
-    for (let r = 0; r < rows; r++) {
-        let row = board[r];
-        row = slide(row);
-        board[r] = row;
-        for (let c = 0; c < columns; c++){
-            let tile = document.getElementById(r.toString() + "-" + c.toString());
-            let num = board[r][c];
-            updateTile(tile, num);
-        }
-    }
-}
-
-function slideRight() {
-    for (let r = 0; r < rows; r++) {
-        let row = board[r];         //[0, 2, 2, 2]
-        row.reverse();              //[2, 2, 2, 0]
-        row = slide(row)            //[4, 2, 0, 0]
-        board[r] = row.reverse();   //[0, 0, 2, 4];
-        for (let c = 0; c < columns; c++){
-            let tile = document.getElementById(r.toString() + "-" + c.toString());
-            let num = board[r][c];
-            updateTile(tile, num);
-        }
-    }
-}
-
-function slideUp() {
-    for (let c = 0; c < columns; c++) {
-        let row = [board[0][c], board[1][c], board[2][c], board[3][c]];
-        row = slide(row);
-        // board[0][c] = row[0];
-        // board[1][c] = row[1];
-        // board[2][c] = row[2];
-        // board[3][c] = row[3];
-        for (let r = 0; r < rows; r++){
-            board[r][c] = row[r];
-            let tile = document.getElementById(r.toString() + "-" + c.toString());
-            let num = board[r][c];
-            updateTile(tile, num);
-        }
-    }
-}
-
-function slideDown() {
-    for (let c = 0; c < columns; c++) {
-        let row = [board[0][c], board[1][c], board[2][c], board[3][c]];
-        row.reverse();
-        row = slide(row);
-        row.reverse();
-        // board[0][c] = row[0];
-        // board[1][c] = row[1];
-        // board[2][c] = row[2];
-        // board[3][c] = row[3];
-        for (let r = 0; r < rows; r++){
-            board[r][c] = row[r];
-            let tile = document.getElementById(r.toString() + "-" + c.toString());
-            let num = board[r][c];
-            updateTile(tile, num);
-        }
-    }
-}
-
-function setTwo() {
-    if (!hasEmptyTile()) {
-        return;
-    }
-    let found = false;
-    while (!found) {
-        //find random row and column to place a 2 in
-        let r = Math.floor(Math.random() * rows);
-        let c = Math.floor(Math.random() * columns);
-        if (board[r][c] == 0) {
-            board[r][c] = 2;
-            let tile = document.getElementById(r.toString() + "-" + c.toString());
-            tile.innerText = "2";
-            tile.classList.add("x2");
-            found = true;
-        }
-    }
-}
-
-function hasEmptyTile() {
-    let count = 0;
-    for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < columns; c++) {
-            if (board[r][c] == 0) { //at least one zero in the board
-                return true;
-            }
-        }
+      }
     }
     return false;
+  };
+  /**
+   * listen the event of key down,
+   * move the tile and merge,
+   * check if the game is over
+   * @param {Event} read the key pushed through event.key
+   */
+  onKeyDown(event) {
+    let dir = 0;
+    // prevent the default event of arrow key
+    // then the window will not scroll
+    event.preventDefault();
+
+    // read the direction
+    switch (event.key) {
+      case "ArrowUp":
+        dir = 0;
+        break;
+      case "ArrowRight":
+        dir = 1;
+        break;
+      case "ArrowDown":
+        dir = 2;
+        break;
+      case "ArrowLeft":
+        dir = 3;
+        break;
+      default:
+        return;
+    }
+
+    // the order to traversal the index
+    let traversal = {
+      x: [...defaultTraversalX],
+      y: [...defaultTraversalY]
+    };
+
+    clearAnimateItem();
+    // move the tile and merge
+    // return true if change happen
+
+    let promise = curGame.moveTile(dir, traversal);
+    // change happen and there has empty space
+    // then create a new tile
+    promise.then((moved) => {
+      if (moved && !curGame.isNoEmptySpace()) {
+        curGame.createNewTile();
+      }
+      // the game board is full and no tile can be merged
+      // game over.
+      if (curGame.isNoEmptySpace() && !curGame.canMove()) {
+        curGame.endGame();
+      }
+    });
+  }
+  /**
+   * initial the game.
+   */
+  init = () => {
+    let promise = new Promise((resolve) => {
+      for (let i = 0; i < 4; i++) {
+        this.tile[i] = new Array(4).fill(0);
+      }
+      resolve();
+    });
+    promise
+      .then(this.createNewTile(2))
+      .then(() => document.addEventListener("keydown", this.onKeyDown));
+  };
+  /**
+   * move the tile and merge the neighbor of same value in the direction.
+   * merge will happen only once on the same tile per move
+   * . 2 2 4 -> . . 4 4
+   * @param {Integer} the index of direction
+   * @param {Object}
+   *    x:the order of traversal in the row direction
+   *    y:the order of traversal in the column direction
+   * @return {boolean} whether change happen in this move
+   */
+  async moveTile(d, traversal) {
+    // this.forbiddenTile.clear();
+    let changed = false;
+    let score = 0;
+    if (Game.dir[d][0] == 1) traversal.x = traversal.x.reverse();
+    if (Game.dir[d][1] == 1) traversal.y = traversal.y.reverse();
+
+    // save the last item changed
+    // avoid a tile be merged twice
+    let lastChangedItem = null;
+
+    traversal.x.forEach((i) => {
+      traversal.y.forEach((j) => {
+        let val = this.tile[i][j];
+        if (val != 0) {
+          let cur = { x: i, y: j, val: val };
+          // find the farthest pos tile can move to
+          let finalPos = this.findFinalPos(d, cur);
+          let next = finalPos.next;
+          let newTile;
+          // merge with the next tile
+          if (
+            next.x >= 0 &&
+            next.x < 4 &&
+            next.y >= 0 &&
+            next.y < 4 &&
+            val == this.tile[next.x][next.y] &&
+            (!lastChangedItem ||
+              next.x != lastChangedItem.x ||
+              next.y != lastChangedItem.y)
+          ) {
+            score += val * 2;
+            newTile = { x: next.x, y: next.y, val: val * 2 };
+            lastChangedItem = { x: next.x, y: next.y };
+          } else {
+            newTile = { x: finalPos.x, y: finalPos.y, val: val };
+          }
+
+          if (!changed && (newTile.x != i || newTile.y != j)) {
+            changed = true;
+          }
+          // no change happen
+          if (newTile.x == i && newTile.y == j) return;
+          // update the array
+          this.tile[i][j] = 0;
+          this.tile[newTile.x][newTile.y] = newTile.val;
+          // move the tile
+          this.move(cur, newTile);
+        }
+      });
+    });
+    if (score) this.updateScore(score);
+    return changed;
+  }
+  /**
+   * find the final position the tile will move to.
+   * @param {Array} the order of traversal
+   * @param {Object} x,y
+   * @return {Object} include the final position and its next tile
+   */
+  findFinalPos = (d, cur) => {
+    let res = cur;
+    while (cur.x >= 0 && cur.x <= 3 && cur.y >= 0 && cur.y <= 3) {
+      res = cur;
+      cur = { x: cur.x + Game.dir[d][0], y: cur.y + Game.dir[d][1] };
+      if (
+        cur.x > 3 ||
+        cur.x < 0 ||
+        cur.y > 3 ||
+        cur.y < 0 ||
+        this.tile[cur.x][cur.y]
+      ) {
+        break;
+      }
+    }
+    return {
+      x: res.x,
+      y: res.y,
+      next: { x: cur.x, y: cur.y }
+    };
+  };
+
+  /**
+   * add tile to the game board with animation effect.
+   * @param {Object} new tile
+   * @param {Integet} delay to add the tile / animation time
+   * @param {Boolean} use animation of merging
+   * @param {Boolean} use animation of creating
+   */
+  addTile = (tile, delay, merged, created = false) => {
+    let { x, y, val } = tile;
+    let coord = getCoord(this.item[x * 4 + y]);
+    let newTile = null;
+    // animate
+    if (merged || created) {
+      newTile = document.createElement("div");
+      let className = merged ? "mergeTile" : "newTile";
+      newTile.classList.add(className);
+      newTile.classList.add("item");
+      newTile.dataset.value = val;
+      newTile.innerHTML = val;
+      newTile.style.left = coord.left + "px";
+      newTile.style.top = coord.top + "px";
+      container.append(newTile);
+
+      newTile.getBoundingClientRect();
+      newTile.style.transform = "scale(1)";
+      newTile.style.visibility = "hidden";
+    }
+    setTimeout(() => {
+      this.item[x * 4 + y].innerHTML = val;
+      this.item[x * 4 + y].dataset.value = val;
+    }, delay);
+  };
+  /**
+   * move the tile
+   * @param {Object} old tile
+   * @param {Object} new tile
+   */
+  move = (old, newTile) => {
+    let oldIndex = old.x * 4 + old.y;
+    let newIndex = newTile.x * 4 + newTile.y;
+    let merged = old.val != newTile.val;
+
+    let oldCoord = getCoord(this.item[oldIndex]);
+
+    let moveTile = document.createElement("div");
+    moveTile.classList.add("moveTile", "item");
+    moveTile.dataset.value = old.val;
+    moveTile.innerHTML = old.val;
+    moveTile.style.left = oldCoord.left + "px";
+    moveTile.style.top = oldCoord.top + "px";
+
+    container.append(moveTile);
+    this.item[oldIndex].innerHTML = "";
+    this.item[oldIndex].dataset.value = 0;
+
+    this.addTile(newTile, 100, merged);
+    let newCoord = getCoord(this.item[newIndex]);
+    moveTile.style.left = newCoord.left + "px";
+    moveTile.style.top = newCoord.top + "px";
+    moveTile.style.visibility = "hidden";
+    // moveTile.classList.add('hidden');
+  };
+  /**
+   * update the score
+   * @param {Integer} score to add
+   */
+  updateScore = (score) => {
+    this.score += score;
+    scoreItem.innerHTML = this.score;
+    let item = document.createElement("div");
+    item.className = "scoreAdd";
+    item.innerHTML = `+${score}`;
+    let coord = container.getBoundingClientRect();
+    item.style.top = 60 + "px";
+    item.style.right = 130 + "px";
+    container.append(item);
+    setTimeout(() => {
+      item.style.top = -100 + "px";
+      item.style.opacity = 0;
+    }, 0);
+    setTimeout(() => {
+      item.remove();
+    }, 2000);
+  };
+  /**
+   * game over.
+   */
+  endGame = () => {
+    document.removeEventListener("keydown", this.onKeyDown);
+    console.log("gameover");
+    mask.forEach((i) => {
+      i.hidden = false;
+    });
+  };
+  /**
+   * clear the game board.
+   */
+  clear = () => {
+    this.tile = null;
+    this.score = 0;
+    document.removeEventListener("keydown", this.onKeyDown);
+    for (let i of this.item) {
+      i.innerHTML = "";
+      i.dataset.value = 0;
+    }
+    clearAnimateItem();
+    mask.forEach((i) => {
+      i.hidden = true;
+    });
+  };
+}
+/**
+ * get bounding client rect relative to container.
+ */
+function getCoord(item) {
+  let containerCoord = container.getBoundingClientRect();
+  let coord = item.getBoundingClientRect();
+  return {
+    left: coord.left - containerCoord.left,
+    top: coord.top - containerCoord.top
+  };
+}
+/**
+ * clear the animation item.
+ */
+function clearAnimateItem() {
+  let temp = document.querySelectorAll(".newTile,.mergeTile,.moveTile");
+  temp.forEach((t) => t.remove());
 }
