@@ -1,49 +1,57 @@
-<head>
-    <title>2048</title>
-         <link rel="stylesheet" href="2048.css">
-        <script src="2048.js"></script>
-</head>
-<div id='container'>
-  <div id='head'>
-    <h1>2048</h1>
-    <div id='scoreBar'>
-      <div id='score'>0</div>
-      <div id="best">0</div>
-    </div>
-  </div>
-  <div id="intro">
-    <div id='text'>
-      <p><strong>Play 2048 Game Online</strong></p>
-      <p>Join the numbers and get to the <strong>2048 tile!</strong></p>
-    </div>
-    <button id='restart'>New Game</button>
+<div class="container">
+  <div class="heading">
+    <h1 class="title">2048</h1>
+    <div class="score-container">0</div>
   </div>
 
-  <div id='game'>
-    <div class="item"></div>
-    <div class="item"></div>
-    <div class="item"></div>
-    <div class="item"></div>
-    <div class="item"></div>
-    <div class="item"></div>
-    <div class="item"></div>
-    <div class="item"></div>
-    <div class="item"></div>
-    <div class="item"></div>
-    <div class="item"></div>
-    <div class="item"></div>
-    <div class="item"></div>
-    <div class="item"></div>
-    <div class="item"></div>
-    <div class="item"></div>
-    <div class="mask" hidden></div>
-    <div class="gameover" hidden>Game over!</div>
-    <button id="again" hidden>Try again</button>
+  <div class="game-container">
+    <div class="game-message">
+      <p></p>
+      <div class="lower">
+        <a class="retry-button">重玩</a>
+      </div>
+    </div>
+
+    <div class="grid-container">
+      <div class="grid-row">
+        <div class="grid-cell"></div>
+        <div class="grid-cell"></div>
+        <div class="grid-cell"></div>
+        <div class="grid-cell"></div>
+      </div>
+      <div class="grid-row">
+        <div class="grid-cell"></div>
+        <div class="grid-cell"></div>
+        <div class="grid-cell"></div>
+        <div class="grid-cell"></div>
+      </div>
+      <div class="grid-row">
+        <div class="grid-cell"></div>
+        <div class="grid-cell"></div>
+        <div class="grid-cell"></div>
+        <div class="grid-cell"></div>
+      </div>
+      <div class="grid-row">
+        <div class="grid-cell"></div>
+        <div class="grid-cell"></div>
+        <div class="grid-cell"></div>
+        <div class="grid-cell"></div>
+      </div>
+    </div>
+
+    <div class="tile-container">
+
+    </div>
   </div>
-  <div id='footer'>
-    <p><strong>HOW TO PLAY:</strong> Use your <strong>arrow keys</strong> to move the tiles. When two tiles with the same number touch, they <strong>merge into one!</strong>
-    </p>
-    <div class="line"></div>
-    <p><strong>ScauZirina</strong> 2022 / 02 / 11</p>
-  </div>
+
+  
+ <!-- <p class="game-explanation">
+    <strong class="important">提示:</strong> 按方向键或者触摸屏幕即可开玩
+  </p>
+  <hr>
+ 	<p>2014</p>
+    -->
 </div>
+
+  
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/hammer.js/1.0.6/hammer.min.js'></script>
